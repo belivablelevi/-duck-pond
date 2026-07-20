@@ -56,7 +56,19 @@ local function wirePrompt(duck)
         local range = getNetRange(userId)
         if (hrp.Position - duck.Position).Magnitude > range + 2 then return end
 
-        -- Catch is valid — record duck data before destroying the instance
+        -- (4) Coin check — player must afford the catch cost
+        local catchCost = duck:GetAttribute("CatchCost") or 0
+        local pData = playerData[userId]
+        if not pData or pData.coins < catchCost then return end
+
+        -- Catch is valid — deduct cost and record duck
+        if catchCost > 0 then
+            pData.coins -= catchCost
+            remotes.UpdateCoins:FireClient(player, {
+                coins            = pData.coins,
+                uncollectedCoins = 0,
+            })
+        end
         duck:SetAttribute("Caught", true)
         local duckData = {
             rarity          = duck:GetAttribute("Rarity"),

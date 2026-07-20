@@ -61,12 +61,13 @@ local function spawnDuck()
 
     duck:SetAttribute("Rarity",          rarityData.name)
     duck:SetAttribute("IncomePerMinute", rarityData.incomePerMinute)
+    duck:SetAttribute("CatchCost",       rarityData.catchCost)
     duck:SetAttribute("Caught",          false)
 
-    -- ProximityPrompt — server handles Triggered in the CatchHandler task
     local prompt = Instance.new("ProximityPrompt")
+    local costLabel = rarityData.catchCost > 0 and (" 🪙" .. rarityData.catchCost) or " (Free)"
     prompt.ObjectText            = rarityData.name .. " Duck"
-    prompt.ActionText            = "Catch"
+    prompt.ActionText            = "Catch" .. costLabel
     prompt.MaxActivationDistance = C.MAX_NET_RANGE
     prompt.HoldDuration          = 0
     prompt.Parent                = duck
