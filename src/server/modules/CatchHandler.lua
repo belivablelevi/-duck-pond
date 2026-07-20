@@ -64,6 +64,12 @@ local function wirePrompt(duck)
         }
         table.insert(inv.ducks, duckData)
 
+        -- Track total ducks caught for leaderstats
+        local data = playerData[userId]
+        if data then
+            data.ducksCaught = (data.ducksCaught or 0) + 1
+        end
+
         -- Lazy-require: DuckSpawner is loaded by Main.server.lua before CatchHandler,
         -- so requiring it here (not at top-level) avoids a circular require at startup.
         local DuckSpawner = require(script.Parent.DuckSpawner)

@@ -53,10 +53,39 @@ UpgradeManager.init(Remotes, playerData)
 
 -- Player lifecycle -------------------------------------------------------
 
+local function makeLeaderstats(player: Player, data)
+	local ls = Instance.new("Folder")
+	ls.Name   = "leaderstats"
+	ls.Parent = player
+
+	local coins = Instance.new("NumberValue")
+	coins.Name   = "Coins"
+	coins.Value  = data.coins
+	coins.Parent = ls
+
+	local ducksCaught = Instance.new("NumberValue")
+	ducksCaught.Name   = "Ducks Caught"
+	ducksCaught.Value  = data.ducksCaught or 0
+	ducksCaught.Parent = ls
+end
+
+local function updateLeaderstats(player: Player)
+	local data = playerData[player.UserId]
+	local ls   = player:FindFirstChild("leaderstats")
+	if not data or not ls then return end
+	local coinsVal = ls:FindFirstChild("Coins")
+	local ducksVal = ls:FindFirstChild("Ducks Caught")
+	if coinsVal then coinsVal.Value = data.coins end
+	if ducksVal then ducksVal.Value = data.ducksCaught or 0 end
+end
+
 local function onPlayerAdded(player: Player)
 	-- Load (or create) persistent data and register it in the shared table.
 	local data = DataManager.loadPlayer(player)
 	playerData[player.UserId] = data
+
+	-- Create the leaderstats folder Roblox displays in the scoreboard.
+	makeLeaderstats(player, data)
 
 	-- Claim a farm plot and wire its deposit/collect prompts.
 	FarmManager.assignPlot(player)
@@ -112,6 +141,18 @@ local function onPlayerRemoving(player: Player)
 	CatchHandler.removePlayer(player)
 	playerData[userId] = nil
 end
+
+-- Keep leaderstats in sync whenever the server fires a coin update to any client.
+-- We intercept by polling — simpler than threading updateLeaderstats into every module.
+-- A 1-second tick is fine; the real-time HUD uses the RemoteEvent directly.
+task.spawn(function()
+	while true do
+		task.wait(1)
+		for _, player in ipairs(Players:GetPlayers()) do
+			updateLeaderstats(player)
+		end
+	end
+end)
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)

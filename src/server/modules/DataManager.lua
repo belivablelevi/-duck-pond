@@ -7,8 +7,9 @@ local store = DataStoreService:GetDataStore(C.DATASTORE_NAME)
 
 local function defaultData()
     return {
-        coins    = 0,
-        feathers = 0,
+        coins       = 0,
+        feathers    = 0,
+        ducksCaught = 0,
         upgrades = {
             CarryCapacity    = 0,
             WalkSpeed        = 0,
