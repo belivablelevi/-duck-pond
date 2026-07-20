@@ -67,7 +67,7 @@ local function spawnDuck()
     local prompt = Instance.new("ProximityPrompt")
     prompt.ObjectText            = rarityData.name .. " Duck"
     prompt.ActionText            = "Catch"
-    prompt.MaxActivationDistance = C.BASE_NET_RANGE
+    prompt.MaxActivationDistance = C.MAX_NET_RANGE
     prompt.HoldDuration          = 0
     prompt.Parent                = duck
 

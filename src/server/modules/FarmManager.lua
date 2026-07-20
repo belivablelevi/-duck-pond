@@ -62,13 +62,14 @@ end
 
 -- Wire the DepositPrompt on a plot for a specific owning player.
 -- Only the plot owner's triggered event is accepted.
-local function wireDepositPrompt(plot: Part, player: Player)
+-- Returns the RBXScriptConnection so the caller can disconnect it on release.
+local function wireDepositPrompt(plot: Part, player: Player): RBXScriptConnection?
     local depositPrompt = plot:FindFirstChild("DepositPrompt")
-    if not depositPrompt then return end
+    if not depositPrompt then return nil end
     depositPrompt.Enabled = true
     depositPrompt.ObjectText = player.Name .. "'s Farm"
 
-    depositPrompt.Triggered:Connect(function(triggeringPlayer: Player)
+    return depositPrompt.Triggered:Connect(function(triggeringPlayer: Player)
         if triggeringPlayer ~= player then return end
 
         -- Lazy-require: CatchHandler is loaded before FarmManager by Main.server.lua
@@ -92,12 +93,13 @@ end
 
 -- Wire the CollectPrompt on a plot for a specific owning player.
 -- Transfers floored uncollected coins into playerData.coins.
-local function wireCollectPrompt(plot: Part, player: Player)
+-- Returns the RBXScriptConnection so the caller can disconnect it on release.
+local function wireCollectPrompt(plot: Part, player: Player): RBXScriptConnection?
     local collectPrompt = plot:FindFirstChild("CollectPrompt")
-    if not collectPrompt then return end
+    if not collectPrompt then return nil end
     collectPrompt.Enabled = true
 
-    collectPrompt.Triggered:Connect(function(triggeringPlayer: Player)
+    return collectPrompt.Triggered:Connect(function(triggeringPlayer: Player)
         if triggeringPlayer ~= player then return end
 
         local userId = player.UserId
@@ -128,6 +130,9 @@ function FarmManager.init(r, pData)
             for userId, farm in pairs(playerFarms) do
                 if #farm.farmDucks == 0 then continue end
 
+                local data = playerData[userId]
+                if not data then continue end
+
                 local player = game:GetService("Players"):GetPlayerByUserId(userId)
                 if not player then continue end
 
@@ -141,7 +146,7 @@ function FarmManager.init(r, pData)
 
                 farm.uncollectedCoins = math.min(farm.uncollectedCoins + tickEarned, cap)
                 remotes.UpdateCoins:FireClient(player, {
-                    coins            = playerData[userId].coins,
+                    coins            = data.coins,
                     uncollectedCoins = farm.uncollectedCoins,
                 })
             end
@@ -170,8 +175,10 @@ function FarmManager.assignPlot(player: Player)
                 uncollectedCoins = 0,
             }
 
-            wireDepositPrompt(plot, player)
-            wireCollectPrompt(plot, player)
+            -- Store connections so releasePlot can disconnect them and
+            -- prevent stale handler accumulation on repeated plot assignments.
+            playerFarms[player.UserId].depositConn = wireDepositPrompt(plot, player)
+            playerFarms[player.UserId].collectConn = wireCollectPrompt(plot, player)
 
             print("[FarmManager] Assigned plot " .. plot.Name .. " to " .. player.Name)
             return
@@ -180,10 +187,15 @@ function FarmManager.assignPlot(player: Player)
     warn("[FarmManager] No free plots available for " .. player.Name)
 end
 
--- Release a player's plot on leave: clear Owner, disable prompts, remove farm entry.
+-- Release a player's plot on leave: clear Owner, disable prompts,
+-- disconnect stored handlers to prevent stale closure accumulation, remove farm entry.
 function FarmManager.releasePlot(player: Player)
     local farm = playerFarms[player.UserId]
     if not farm then return end
+
+    -- Disconnect prompt listeners before clearing the entry.
+    if farm.depositConn then farm.depositConn:Disconnect() end
+    if farm.collectConn then farm.collectConn:Disconnect() end
 
     farm.plot.Owner.Value = ""
     local depositPrompt = farm.plot:FindFirstChild("DepositPrompt")
@@ -198,6 +210,15 @@ end
 -- Returns the farm entry for a given userId (used by Main.server.lua and UpgradeManager).
 function FarmManager.getFarm(userId: number)
     return playerFarms[userId]
+end
+
+-- Fires UpdateFarm to the player using the current farm state.
+-- Used by Main.server.lua on player join to sync restored farm ducks to the client.
+function FarmManager.fireFarmUpdate(player: Player)
+    local farm = playerFarms[player.UserId]
+    if farm then
+        fireFarmUpdate(player, farm)
+    end
 end
 
 return FarmManager

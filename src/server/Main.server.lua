@@ -89,6 +89,10 @@ local function onPlayerAdded(player: Player)
 	})
 
 	Remotes.UpdateUpgrades:FireClient(player, data.upgrades)
+
+	-- Send farm state so FarmUI renders restored ducks immediately on rejoin.
+	-- Must fire after assignPlot + farm duck restore so the data is ready.
+	FarmManager.fireFarmUpdate(player)
 end
 
 local function onPlayerRemoving(player: Player)

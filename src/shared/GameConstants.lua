@@ -19,6 +19,7 @@ return {
     INCOME_CAP_MULTIPLIER = 300,
 
     BASE_NET_RANGE   = 5,
+    MAX_NET_RANGE    = 15,
     DEPOSIT_DISTANCE = 8,
     COLLECT_DISTANCE = 8,
 

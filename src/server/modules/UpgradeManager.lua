@@ -6,26 +6,28 @@ local UpgradeManager = {}
 local remotes
 local playerData
 
+-- Per-player CharacterAdded connections for WalkSpeed re-apply.
+-- Stored so each new purchase replaces (disconnects) the old listener
+-- instead of accumulating one per purchase.
+local walkSpeedConns: {[number]: RBXScriptConnection} = {}
+
 local function applyWalkSpeed(player: Player, value: number)
 	local char = player.Character or player.CharacterAdded:Wait()
 	local hum  = char:FindFirstChildOfClass("Humanoid")
 	if hum then hum.WalkSpeed = value end
-	-- Re-apply on respawn
-	player.CharacterAdded:Connect(function(newChar)
+	-- Disconnect the previous respawn listener before making a new one.
+	local prev = walkSpeedConns[player.UserId]
+	if prev then prev:Disconnect() end
+	walkSpeedConns[player.UserId] = player.CharacterAdded:Connect(function(newChar)
 		local newHum = newChar:WaitForChild("Humanoid")
 		newHum.WalkSpeed = value
 	end)
 end
 
 local function applyNetRange(player: Player, value: number)
-	-- Update each duck's ProximityPrompt distance
-	for _, duck in ipairs(workspace.Ducks:GetChildren()) do
-		local prompt = duck:FindFirstChildOfClass("ProximityPrompt")
-		if prompt then
-			-- Roblox ProximityPrompts don't support per-player distance,
-			-- so we track net range in CatchHandler for server-side validation only
-		end
-	end
+	-- ProximityPrompt.MaxActivationDistance is set to C.MAX_NET_RANGE at duck spawn time,
+	-- so the prompt is always reachable at maximum range. The actual per-player range is
+	-- enforced server-side by CatchHandler (magnitude > range + 2 guard).
 	local CatchHandler = require(script.Parent.CatchHandler)
 	CatchHandler.updateNetRange(player.UserId, value)
 end
