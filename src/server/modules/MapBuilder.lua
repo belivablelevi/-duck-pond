@@ -61,21 +61,23 @@ function MapBuilder.build()
 
         -- Deposit prompt (active when player is near own plot)
         local depositPrompt = Instance.new("ProximityPrompt")
-        depositPrompt.Name                = "DepositPrompt"
-        depositPrompt.ObjectText          = "Your Farm"
-        depositPrompt.ActionText          = "Deposit Ducks"
-        depositPrompt.MaxActivationDistance = C.DEPOSIT_DISTANCE
-        depositPrompt.Enabled             = false  -- enabled when plot has an owner nearby
-        depositPrompt.Parent              = plot
+        depositPrompt.Name                   = "DepositPrompt"
+        depositPrompt.ObjectText             = "Your Farm"
+        depositPrompt.ActionText             = "Deposit Ducks"
+        depositPrompt.MaxActivationDistance  = C.DEPOSIT_DISTANCE
+        depositPrompt.RequiresLineOfSight    = false
+        depositPrompt.Enabled                = false
+        depositPrompt.Parent                 = plot
 
         -- Collect income prompt
         local collectPrompt = Instance.new("ProximityPrompt")
-        collectPrompt.Name                = "CollectPrompt"
-        collectPrompt.ObjectText          = "Farm Income"
-        collectPrompt.ActionText          = "Collect Coins"
-        collectPrompt.MaxActivationDistance = C.COLLECT_DISTANCE
-        collectPrompt.Enabled             = false
-        collectPrompt.Parent              = plot
+        collectPrompt.Name                   = "CollectPrompt"
+        collectPrompt.ObjectText             = "Farm Income"
+        collectPrompt.ActionText             = "Collect Coins"
+        collectPrompt.MaxActivationDistance  = C.COLLECT_DISTANCE
+        collectPrompt.RequiresLineOfSight    = false
+        collectPrompt.Enabled                = false
+        collectPrompt.Parent                 = plot
     end
 
     print("[MapBuilder] Map built successfully")
