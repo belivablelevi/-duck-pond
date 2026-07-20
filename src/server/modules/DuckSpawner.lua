@@ -54,7 +54,7 @@ local function spawnDuck()
     duck.Name       = "Duck"
     duck.Size       = rarityData.size
     duck.Position   = position
-    duck.Anchored   = false
+    duck.Anchored   = true
     duck.CanCollide = false
     duck.Material   = Enum.Material.SmoothPlastic
     duck.Color      = rarityData.color
