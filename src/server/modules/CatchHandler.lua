@@ -116,6 +116,15 @@ function CatchHandler.updateCapacity(userId, newCap)
     if inv then inv.capacity = newCap end
 end
 
+-- Called by UpgradeManager after a NetRange purchase.
+-- Net range is read dynamically from playerData.upgrades.NetRange via getNetRange(),
+-- so no immediate state update is needed here.
+function CatchHandler.updateNetRange(userId, newRange)
+    -- Net range is computed on-demand by getNetRange(), which reads from playerData.
+    -- The upgrade tier was already updated by UpgradeManager, so future calls to
+    -- getNetRange() will automatically reflect the new tier.
+end
+
 -- Returns the player's current inventory (by reference — do not mutate externally).
 function CatchHandler.getInventory(player)
     return inventories[player.UserId]
