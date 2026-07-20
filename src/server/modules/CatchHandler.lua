@@ -57,6 +57,7 @@ local function wirePrompt(duck)
         if (hrp.Position - duck.Position).Magnitude > range + 2 then return end
 
         -- Catch is valid — record duck data before destroying the instance
+        duck:SetAttribute("Caught", true)
         local duckData = {
             rarity          = duck:GetAttribute("Rarity"),
             incomePerMinute = duck:GetAttribute("IncomePerMinute"),
@@ -100,7 +101,7 @@ end
 function CatchHandler.initPlayer(player)
     inventories[player.UserId] = {
         ducks    = {},
-        capacity = C.STARTING_CARRY_CAP,
+        capacity = getCarryCap(player.UserId),
     }
 end
 
