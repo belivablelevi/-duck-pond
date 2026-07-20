@@ -66,7 +66,7 @@ end
 local function wireDepositPrompt(plot: Part, player: Player): RBXScriptConnection?
     local depositPrompt = plot:FindFirstChild("DepositPrompt")
     if not depositPrompt then return nil end
-    depositPrompt.Enabled = true
+    depositPrompt.Enabled = false  -- enabled by setDepositEnabled when player carries ducks
     depositPrompt.ObjectText = player.Name .. "'s Farm"
 
     return depositPrompt.Triggered:Connect(function(triggeringPlayer: Player)
@@ -97,7 +97,7 @@ end
 local function wireCollectPrompt(plot: Part, player: Player): RBXScriptConnection?
     local collectPrompt = plot:FindFirstChild("CollectPrompt")
     if not collectPrompt then return nil end
-    collectPrompt.Enabled = true
+    collectPrompt.Enabled = false  -- enabled by income tick once coins accrue
 
     return collectPrompt.Triggered:Connect(function(triggeringPlayer: Player)
         if triggeringPlayer ~= player then return end
@@ -112,6 +112,7 @@ local function wireCollectPrompt(plot: Part, player: Player): RBXScriptConnectio
 
         data.coins            += collected
         farm.uncollectedCoins  = farm.uncollectedCoins - collected
+        collectPrompt.Enabled  = farm.uncollectedCoins >= 1
         fireCoinsUpdate(player, userId)
         fireFarmUpdate(player, farm)
     end)
@@ -149,6 +150,12 @@ function FarmManager.init(r, pData)
                     coins            = data.coins,
                     uncollectedCoins = farm.uncollectedCoins,
                 })
+
+                -- Show collect prompt as soon as at least 1 coin has accrued
+                local collectPrompt = farm.plot:FindFirstChild("CollectPrompt")
+                if collectPrompt and not collectPrompt.Enabled and farm.uncollectedCoins >= 1 then
+                    collectPrompt.Enabled = true
+                end
             end
         end
     end)
@@ -225,6 +232,14 @@ function FarmManager.releasePlot(player: Player)
 
     playerFarms[player.UserId] = nil
     print("[FarmManager] Released plot for " .. player.Name)
+end
+
+-- Called by CatchHandler to show/hide the deposit prompt based on inventory state.
+function FarmManager.setDepositEnabled(userId: number, enabled: boolean)
+    local farm = playerFarms[userId]
+    if not farm then return end
+    local prompt = farm.plot:FindFirstChild("DepositPrompt")
+    if prompt then prompt.Enabled = enabled end
 end
 
 -- Returns the farm entry for a given userId (used by Main.server.lua and UpgradeManager).

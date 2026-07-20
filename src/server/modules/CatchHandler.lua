@@ -70,6 +70,10 @@ local function wirePrompt(duck)
             data.ducksCaught = (data.ducksCaught or 0) + 1
         end
 
+        -- Show deposit prompt now that the player is carrying at least one duck
+        local FarmManager = require(script.Parent.FarmManager)
+        FarmManager.setDepositEnabled(userId, true)
+
         -- Lazy-require: DuckSpawner is loaded by Main.server.lua before CatchHandler,
         -- so requiring it here (not at top-level) avoids a circular require at startup.
         local DuckSpawner = require(script.Parent.DuckSpawner)
@@ -145,9 +149,14 @@ function CatchHandler.clearInventory(player)
     local ducks = inv.ducks   -- capture before clearing
     inv.ducks = {}
     remotes.UpdateInventory:FireClient(player, {
-        ducks    = inv.ducks, -- sends the now-empty array
+        ducks    = inv.ducks,
         capacity = inv.capacity,
     })
+
+    -- Hide deposit prompt since inventory is now empty
+    local FarmManager = require(script.Parent.FarmManager)
+    FarmManager.setDepositEnabled(player.UserId, false)
+
     return ducks              -- caller (FarmManager) processes these
 end
 

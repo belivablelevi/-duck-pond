@@ -66,7 +66,6 @@ function MapBuilder.build()
         depositPrompt.ActionText             = "Deposit Ducks"
         depositPrompt.MaxActivationDistance  = C.DEPOSIT_DISTANCE
         depositPrompt.RequiresLineOfSight    = false
-        depositPrompt.Exclusivity            = Enum.ProximityPromptExclusivity.AlwaysShow
         depositPrompt.Enabled                = false
         depositPrompt.Parent                 = plot
 
@@ -76,7 +75,6 @@ function MapBuilder.build()
         collectPrompt.ActionText             = "Collect Coins"
         collectPrompt.MaxActivationDistance  = C.COLLECT_DISTANCE
         collectPrompt.RequiresLineOfSight    = false
-        collectPrompt.Exclusivity            = Enum.ProximityPromptExclusivity.AlwaysShow
         collectPrompt.Enabled                = false
         collectPrompt.Parent                 = plot
     end
