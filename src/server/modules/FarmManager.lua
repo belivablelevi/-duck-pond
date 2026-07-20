@@ -180,6 +180,25 @@ function FarmManager.assignPlot(player: Player)
             playerFarms[player.UserId].depositConn = wireDepositPrompt(plot, player)
             playerFarms[player.UserId].collectConn = wireCollectPrompt(plot, player)
 
+            -- Floating label so the player can spot their plot from a distance
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name            = "PlotLabel"
+            billboard.Size            = UDim2.new(0, 160, 0, 40)
+            billboard.StudsOffset     = Vector3.new(0, 4, 0)
+            billboard.AlwaysOnTop     = false
+            billboard.Parent          = plot
+
+            local label = Instance.new("TextLabel")
+            label.Size                = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Font                = Enum.Font.GothamBold
+            label.TextSize            = 16
+            label.TextColor3          = Color3.fromRGB(245, 193, 74)
+            label.TextStrokeTransparency = 0
+            label.Text                = "🏠 " .. player.Name .. "'s Farm"
+            label.Parent              = billboard
+            playerFarms[player.UserId].billboard = billboard
+
             print("[FarmManager] Assigned plot " .. plot.Name .. " to " .. player.Name)
             return
         end
@@ -193,9 +212,10 @@ function FarmManager.releasePlot(player: Player)
     local farm = playerFarms[player.UserId]
     if not farm then return end
 
-    -- Disconnect prompt listeners before clearing the entry.
+    -- Disconnect prompt listeners and remove plot label before clearing the entry.
     if farm.depositConn then farm.depositConn:Disconnect() end
     if farm.collectConn then farm.collectConn:Disconnect() end
+    if farm.billboard then farm.billboard:Destroy() end
 
     farm.plot.Owner.Value = ""
     local depositPrompt = farm.plot:FindFirstChild("DepositPrompt")
